@@ -1,36 +1,64 @@
-const SUPABASE_URL = "https://mqgcfzhjapvypiwxcaj.supabase.co";
-const SUPABASE_KEY = "sb_publishable_O5zOjcU5IFCLkNzcmBf1-g_jPxzpWrt";
+const SUPABASE_URL = "YOUR_ACTUAL_SUPABASE_URL";
+const SUPABASE_KEY = "YOUR_ACTUAL_PUBLISHABLE_KEY";
 
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
 
-const form = document.getElementById("registrationForm");
+document.addEventListener("DOMContentLoaded", () => {
 
-form.addEventListener("submit", async function(event) {
+    const form = document.getElementById("registrationForm");
 
-    event.preventDefault();
-
-    const registration = {
-        full_name: document.getElementById("name").value,
-        age: parseInt(document.getElementById("age").value),
-        phone_number: document.getElementById("phone").value,
-        email: document.getElementById("email").value,
-        course: document.getElementById("course").value,
-        preferred_start_date: document.getElementById("date").value,
-        address: document.getElementById("location").value
-    };
-
-    const { error } = await supabase
-        .from("registrations")
-        .insert([registration]);
-
-    if (error) {
-        console.error("Registration error:", error);
-        alert("Registration failed. Please try again.");
+    if (!form) {
+        console.error("Registration form not found.");
         return;
     }
 
-    window.location.href = "success.html";
+    form.addEventListener("submit", async (event) => {
+
+        event.preventDefault();
+
+        const registration = {
+            full_name: document.getElementById("name").value.trim(),
+            age: parseInt(document.getElementById("age").value, 10),
+            phone_number: document.getElementById("phone").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            course: document.getElementById("course").value,
+            preferred_start_date: document.getElementById("date").value || null,
+            address: document.getElementById("location").value.trim()
+        };
+
+        const button = form.querySelector('button[type="submit"]');
+
+        button.disabled = true;
+        button.textContent = "Submitting...";
+
+        try {
+
+            const { error } = await supabaseClient
+                .from("registrations")
+                .insert([registration]);
+
+            if (error) {
+                console.error("Supabase error:", error);
+                alert("Registration failed. Please try again.");
+                button.disabled = false;
+                button.textContent = "Submit Registration";
+                return;
+            }
+
+            window.location.href = "success.html";
+
+        } catch (error) {
+
+            console.error("Unexpected error:", error);
+            alert("Something went wrong. Please try again.");
+
+            button.disabled = false;
+            button.textContent = "Submit Registration";
+        }
+
+    });
+
 });
